@@ -32,10 +32,11 @@ for k, v in r.items():
     id=$(resolve "$1")
     sqlite3 "$DB" "SELECT coalesce(title,'(untitled)') FROM tasks WHERE task_id='$id' LIMIT 1" ;;
   status|order|nudge)
-    id=$(resolve "$1"); [ -z "$id" ] && { echo "usage: team.sh $cmd <sessId|nickname> [message...]"; exit 1; }
+    raw="$1"
+    id=$(resolve "$raw"); [ -z "$id" ] && { echo "usage: team.sh $cmd <sessId|nickname> [message...]"; exit 1; }
     echo "$id" | grep -q '^sess_[A-Za-z0-9-]*$' || { echo "bad session id"; exit 1; }
     ws=$(sqlite3 "$DB" "SELECT workspace_path FROM tasks WHERE task_id='$id' LIMIT 1")
-    [ -z "$ws" ] && ws=$(NAME="$id" python3 -c '
+    [ -z "$ws" ] && ws=$(NAME="$raw" python3 -c '
 import json, os
 try: r = json.load(open(os.environ["ZCODE_TEAM_ROSTER"]))
 except Exception: r = {}
@@ -81,7 +82,8 @@ except Exception: r = {}
     mode=""; case "$mission" in "--plan "*) mode="plan"; mission="${mission#--plan }";; esac
     MODE_FLAG=""; [ -n "$mode" ] && MODE_FLAG="--mode plan"
     cd "$ws" || exit 1
-    out=$(timeout 900 node "$ZC" $MODE_FLAG -p "You are $name on this project ($mode${mode:+, read-only} worker). Role/mission: $mission Confirm by replying: READY <one-line understanding>." --target "$name — $mission" --json 2>/dev/null)
+    out=$(timeout 900 node "$ZC" $MODE_FLAG -p "/goal $name — $mission
+You are $name on this project ($mode${mode:+, read-only} worker). Role/mission: $mission Confirm by replying: READY <one-line understanding>." --json 2>/dev/null)
     sid=$(printf '%s' "$out" | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("sessionId",""))
 except Exception: print("")')
