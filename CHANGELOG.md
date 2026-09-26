@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0 — 2026-09-26
+- `hire --plan` — spawn READ-ONLY workers (plan mode): QA/review lanes that run in parallel with writers
+- `broadcast` — one order to every rostered worker
+- `tell <from> <to>` — lead-relayed worker-to-worker messaging
+- `proof <dev>` — objective workspace facts (git log, dirty files, commit age) to verify worker claims
+- `standup` — all-status + workspace git summary in one report
+- `notify` — deliver reports to a webhook (TEAM_WEBHOOK); everything logged
+- `watch` — live all-status dashboard loop
+- `deploy-lock` — serialize deploy windows; orders mentioning deploy/build/restart are refused while another worker holds the lock
+- `autopoll on [min]|off|run` — cron-driven self-waking supervision (all-status + optional webhook notify)
+- `ROADMAP.md` — staffing doctrine: project lifecycle, how many devs per project size, lanes/skills/bans per role, task-packet order format, anti-patterns
+
 ## 0.2.0 — 2026-09-26
 - `hire <nick> <wsDir> [mission]` — the lead can CREATE new sessions with a role
   and nickname; rostered and addressable by name forever

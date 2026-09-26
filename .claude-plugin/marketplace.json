@@ -7,7 +7,7 @@
     {
       "name": "team-lead",
       "source": "./",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "description": "Operate, supervise and team-lead other ZCode sessions: assign goals, poll status, redirect drift \u2014 cross-session orchestration from inside any session.",
       "displayName": "Team Lead",
       "category": "productivity"
