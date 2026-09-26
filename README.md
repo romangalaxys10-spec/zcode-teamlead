@@ -76,3 +76,14 @@ Or in a session, just tell the lead: *"Use the team-lead skill: manage sess_A an
 ## License
 
 MIT
+
+## Bonus: unlock bot group chats (unofficial app patch)
+
+The Telegram group-chat support this plugin was born from is an app-bundle mod,
+not plugin material — it lives in [`app-patches/`](app-patches/): bots answer in
+groups, every group member can drive them, `@botname` command suffixes parse.
+Byte-exact for macOS ZCode 3.14.3.7762; aborts safely on other versions.
+
+```bash
+python3 app-patches/patch-zcode-bots.py
+```
