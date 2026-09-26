@@ -16,6 +16,10 @@ patching:
   (binding stays private-only on purpose: pairing codes must never leak in groups)
 - slash commands with Telegram's `@botname` suffix parse correctly
   (in groups, Telegram sends `/new@yourbot`; that used to be an unknown command)
+- **mid-task messages get queued, not bounced**: send a message while the bot is
+  busy and it ACKs ("📥 Queued — full report once the current task wraps"), keeps
+  retrying in the background (up to ~30 min), and when the running task finishes
+  your message is processed and you receive one complete report including it
 
 **Discord upgrades (`--discord`)** — if your bundle carries the community Discord
 adapter, this also upgrades it to reply as rich embeds, register native slash

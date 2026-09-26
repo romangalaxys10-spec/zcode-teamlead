@@ -1,5 +1,10 @@
 # Changelog
 
+## unreleased — 2026-09-26 (app-patches)
+- patch 8: mid-task messages no longer bounce with "task still running" — the bot
+  ACKs ("📥 Queued…"), auto-retries every 60s (up to 30×), and when the running
+  task finishes your message is processed and folded into a full report
+
 ## 0.1.1 — 2026-09-26
 - fix: `team.sh order|status|title` positional-arg bug (id was read from the wrong
   position after `shift`, so every order failed with the usage error)

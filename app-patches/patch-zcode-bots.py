@@ -181,6 +181,49 @@ def apply_snippet(data, s, r, markers, label):
     return True
 
 
+
+# ---------------------------------------------------------------- patch 8: mid-task ack + auto-requeue
+
+S8 = ('if(P.context.mode==="task"&&P.context.activeTaskId&&await mo(P.context))'
+      'return[me(h.actor,ne(P.locale,"taskRunning"))];')
+R8 = ('if(P.context.mode==="task"&&P.context.activeTaskId&&await mo(P.context)){let q=h.rq||0;'
+      'if(q<30)setTimeout(()=>G4({...h,rq:q+1}).catch(()=>{}),6e4);'
+      'return[me(h.actor,q?"\\ud83d\\udce5 Still on it \\u2014 the full report (incl. this) lands once the current task wraps.":'
+      '"\\ud83d\\udce5 Queued \\u2014 full report (incl. this) once the current task wraps.")]}'
+      'return[me(h.actor,ne(P.locale,"taskRunning"))];')
+D1 = 'modelSelection:{providerId:Je.providerId,modelId:Je.modelId,...Je.options?{options:{...Je.options}}:{}}'
+N1 = 'modelSelection:{...Je}'
+D2 = ('Ut.info(void 0,`replaced deleted Bot task bot=${P.bot.id} oldTask=${I} newTask=${Ue.taskId} '
+      'workspace=${Kn(We.workspacePath,We.workspaceIdentity)}`),await en(P.bot,me(h.actor,ne(P.locale,'
+      '"deletedTaskReplaced"))).catch(At=>{Ut.warn(void 0,`deleted task replacement notice failed bot=${P.bot.id} '
+      'task=${Ue.taskId}: ${At instanceof Error?At.message:String(At)}`)})')
+N2 = ('Ut.info(void 0,`replaced ${I} -> ${Ue.taskId}`),'
+      'await en(P.bot,me(h.actor,ne(P.locale,"deletedTaskReplaced"))).catch(()=>{})')
+D3 = 'throw new Error("Bot \\u65E0\\u6CD5\\u4ECE\\u76EE\\u6807 Host \\u89E3\\u6790 Submission \\u6A21\\u578B")'
+N3 = 'throw Error("model selection unavailable")'
+M8 = b"rq:q+1"
+
+
+def apply_patch8(data):
+    if bytes(data).find(M8) != -1:
+        print("  mid-task ack+requeue: already present, skipping")
+        return
+    s8, d1, d2, d3 = S8.encode(), D1.encode(), D2.encode(), D3.encode()
+    for name, s in [("gate", s8), ("donor1", d1), ("donor2", d2), ("donor3", d3)]:
+        if bytes(data).count(s) != 1:
+            sys.exit(f"  patch 8 {name}: snippet count={bytes(data).count(s)} - version differs, aborting")
+    i8, i1 = data.find(s8), data.find(d1)
+    i2, i3 = data.find(d2), data.find(d3)
+    start, end = min(i8, i1, i2, i3), max(i1 + len(d1), i2 + len(d2), i3 + len(d3))
+    span = bytes(data[start:end]).decode("utf-8")
+    new_span = span.replace(s8.decode(), R8).replace(d1.decode(), N1).replace(d2.decode(), N2).replace(d3.decode(), N3)
+    if len(new_span.encode()) > len(span.encode()):
+        sys.exit(f"  patch 8: over budget by {len(new_span.encode()) - len(span.encode())} bytes")
+    new_span += " " * (len(span.encode()) - len(new_span.encode()))
+    data[start:end] = new_span.encode()
+    print(f"  mid-task ack+requeue: applied @ {start}")
+
+
 def verify_bundle(asar_path, rel, markers):
     with tempfile.TemporaryDirectory() as td:
         subprocess.run(
@@ -224,6 +267,8 @@ def main():
     apply_snippet(data, REGION2, NEW2, M2, "2/4 group binding")
     apply_snippet(data, S3, R3, M3, "3/4 bind reply")
     apply_snippet(data, S4, R4, M4, "4/4 @suffix parse")
+    print("[*] mid-task ack + auto-requeue")
+    apply_patch8(data)
 
     if args.discord:
         print("[*] discord upgrades")
@@ -298,7 +343,7 @@ def main():
     print(f"[*] written OK ({orig_len} bytes, header untouched)")
 
     print("[*] verifying (extract + syntax check)...")
-    verify_bundle(asar, "out/host/index.js", [M1, M2, M3, M4])
+    verify_bundle(asar, "out/host/index.js", [M1, M2, M3, M4, M8])
     if args.discord:
         verify_bundle(asar, "out/renderer/assets/styles-DEELZGp2.js", [M7])
     print("VERIFY OK. Fully quit ZCode (Cmd+Q) and reopen to load the patched runtime.")
