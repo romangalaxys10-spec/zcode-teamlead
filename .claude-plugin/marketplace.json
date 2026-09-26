@@ -1,12 +1,14 @@
 {
   "name": "zcode-teamlead",
-  "owner": {"name": "ZCode TeamLead contributors"},
+  "owner": {
+    "name": "ZCode TeamLead contributors"
+  },
   "plugins": [
     {
       "name": "team-lead",
       "source": "./",
-      "version": "0.1.0",
-      "description": "Operate, supervise and team-lead other ZCode sessions: assign goals, poll status, redirect drift — cross-session orchestration from inside any session.",
+      "version": "0.1.1",
+      "description": "Operate, supervise and team-lead other ZCode sessions: assign goals, poll status, redirect drift \u2014 cross-session orchestration from inside any session.",
       "displayName": "Team Lead",
       "category": "productivity"
     }
