@@ -13,9 +13,9 @@ case "$cmd" in
   list)
     sqlite3 "$DB" "SELECT task_id||'  |  '||substr(coalesce(title,'(untitled)'),1,45)||'  |  '||workspace_path FROM tasks ORDER BY rowid DESC" ;;
   title)
-    sqlite3 "$DB" "SELECT coalesce(title,'(untitled)') FROM tasks WHERE task_id='$2' LIMIT 1" ;;
+    sqlite3 "$DB" "SELECT coalesce(title,'(untitled)') FROM tasks WHERE task_id='$1' LIMIT 1" ;;
   order|status)
-    id="$2"; [ -z "$id" ] && { echo "usage: team.sh $cmd <sessId> <message...>"; exit 1; }
+    id="$1"; [ -z "$id" ] && { echo "usage: team.sh $cmd <sessId> <message...>"; exit 1; }
     echo "$id" | grep -q '^sess_[A-Za-z0-9-]*$' || { echo "bad session id"; exit 1; }
     ws=$(sqlite3 "$DB" "SELECT workspace_path FROM tasks WHERE task_id='$id' LIMIT 1")
     [ -z "$ws" ] && { echo "unknown session: $id"; exit 1; }
@@ -25,7 +25,7 @@ case "$cmd" in
       shift; msg="$*"
     fi
     cd "$ws" || exit 1
-    timeout 300 node "$ZC" --resume "$id" -p "$msg" --json 2>/dev/null \
+    timeout 900 node "$ZC" --resume "$id" -p "$msg" --json 2>/dev/null \
       | python3 -c 'import json,sys
 try: print(json.load(sys.stdin).get("response","(no response)"))
 except Exception as e: print("ORDER FAILED:", e)'
