@@ -1,0 +1,7 @@
+{
+  "name": "team-lead",
+  "displayName": "Team Lead",
+  "description": "Operate, supervise and team-lead other ZCode sessions: assign goals, poll status, redirect drift — cross-session orchestration from inside any session.",
+  "version": "0.1.0",
+  "keywords": ["sessions", "orchestration", "team-lead", "multi-agent", "supervision"]
+}
