@@ -1,89 +1,140 @@
-# ZCode TeamLead 🧭
+<div align="center">
 
-Turn any ZCode session into a **team lead** that operates, supervises and manages your other sessions — assign goals, poll status, redirect drift, get things done.
+# 🧭 ZCode TeamLead
 
-```
-You ──▶ TeamLead session ──▶ "Supra-Dev #1"  (assign goal, poll status)
-                      ──────▶ "Super-Dev #2" (assign goal, poll status)
-```
+**Your ZCode sessions, managed by a ZCode session.**
 
-## How it works
+[![version](https://img.shields.io/badge/version-0.1.1-blue)](CHANGELOG.md)
+[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey)](#requirements)
+[![battle-tested](https://img.shields.io/badge/battle--tested-✔-success)](#-battle-tested-not-a-demo)
 
-ZCode's CLI can resume any persisted session and inject a prompt:
+One session becomes the **team lead** — it assigns goals to your other sessions,
+polls their progress, redirects drifters, and reports milestones back to you.
+You run one session. It runs the team.
 
+`zcode plugins marketplace add romangalaxys10-spec/zcode-teamlead`
+
+</div>
+
+---
+
+## ⚡ What it does
+
+| Command | What happens |
+|---|---|
+| `team.sh list` | 📋 Roster of every session — id, title, workspace |
+| `team.sh status <sessId>` | 🔍 3-line check-in: **Task / Progress / Blockers** |
+| `team.sh order <sessId> <msg>` | 🎯 Injects a directive **into** that session — it executes with its full context and replies |
+| `team.sh title <sessId>` | 🏷️ Session title lookup |
+
+Under the hood: ZCode's CLI can resume any persisted session and inject a prompt
+(`zcode --resume <sessId> -p "..." --json`). This plugin turns that into a
+team-lead toolkit **plus** the supervision protocol that makes it actually work.
+
+## 🚀 60-second setup
+
+**1 — install**
 ```bash
-zcode --resume <sessId> -p "your directive" --json
-```
-
-The plugin wraps this into a toolkit + a lead protocol skill, so a lead session can run its team hands-free.
-
-## Install
-
-**From this repo (marketplace):**
-```bash
-zcode plugins marketplace add <your-github-user>/zcode-teamlead
+zcode plugins marketplace add romangalaxys10-spec/zcode-teamlead
 zcode plugins install team-lead@zcode-teamlead
 ```
+*(or manually: `cp -r skills/team-lead ~/.zcode/skills/`)*
 
-**Or manually** — copy the skill:
-```bash
-git clone https://github.com/<your-github-user>/zcode-teamlead
-mkdir -p ~/.zcode/skills
-cp -r zcode-teamlead/skills/team-lead ~/.zcode/skills/
+**2 — arm your lead.** Send this to the session that will lead (paste as-is,
+fill in your worker session ids from `team.sh list`):
+
+```text
+You are TEAM LEAD with a working toolkit: bash <path-to>/team.sh
+(subcommands: list | status <sessId> | order <sessId> <message>).
+
+Your workers:
+- sess_<worker-1-id> (Dev #1)
+- sess_<worker-2-id> (Dev #2)
+
+Standing orders: poll both workers with the status command every ~20 minutes.
+Distribute new goals between them with order — one concrete goal per worker,
+with a definition of done. Redirect any worker that drifts. Report a one-line
+summary to me when a milestone lands or a worker is stuck twice.
 ```
 
-Then start a new ZCode session (or mention `/team` / the team-lead skill in an existing one).
+**3 — watch it manage.** First thing the lead does is poll both workers and
+show you their state. Then it delegates. You supervise the supervisor. 😎
 
-## Usage
+💡 Sessions already open won't see the new skill until restarted — the arming
+message above contains the absolute toolkit path, so it works on *any* running
+session regardless.
 
-```bash
-# discover sessions
-bash ./skills/team-lead/team.sh list
-#   sess_cbe7857e…  |  Supervisor TeamLead (TG)  |  ~/Projects/Supra-Tengiz
-#   sess_58bddcee…  |  Supra-Dev #1             |  ~/Projects/Supra-Tengiz
+## 🏆 Battle-tested (not a demo)
 
-# standard check-in
-bash ./skills/team-lead/team.sh status sess_58bddcee-003b-441d-8396-a39fafdb488b
-#   Task: guest-page rework | Progress: 100% | Blockers: none
+Shipped from a real 3-session team running in parallel on one shared VPS —
+**Supervisor TeamLead (TG)** + **Supra-Dev #1** (backend) + **Super-Dev #2**
+(frontend). A live status poll through the toolkit:
 
-# assign work
-bash ./skills/team-lead/team.sh order sess_58bddcee-003b-441d-8396-a39fafdb488b \
-  "Implement dark-mode toggle on settings page. Done = toggle persists, tests pass. Report when shipped."
+```text
+Task:      Full QA security hardening — 5 bugs fixed, deployed, verified, pushed (8970fd3)
+Progress:  100% (all fixes live, cleanup done)
+Blockers:  None — optional follow-ups only
 ```
 
-Or in a session, just tell the lead: *"Use the team-lead skill: manage sess_A and sess_B — goal: ship X by 5pm. Poll status every 20 minutes."*
+The lead's protocol (assignment → polling → redirection → escalation) was
+forged there, including the golden rules: *worker claims are not facts — verify
+on the target before believing "done"*, and *foreground workers get killed by
+mid-turn messages — always run them in the background*.
 
-## The lead protocol (from the skill)
+## 🧠 The lead protocol
 
 1. **Assign** — one order per worker: concrete goal + definition of done + deadline
 2. **Poll** — `status` on milestones, not constantly
-3. **Redirect** — correction orders when a worker drifts
-4. **Escalate** — summarize to the human when a milestone lands or a worker is stuck twice
+3. **Redirect** — exact correction orders when a worker drifts
+4. **Escalate** — one-line summaries to the human when a milestone lands or a worker is stuck twice
 
-## Requirements
+There's also a `/team` slash command for quick dispatches, and a full playbook
+in [`skills/team-lead/SKILL.md`](skills/team-lead/SKILL.md).
 
-- ZCode desktop or CLI (`zcode`) on macOS/Linux
-- `sqlite3`, `python3`, `node` on PATH
-- Env overrides: `ZCODE_CLI` (path to `zcode.cjs`), `ZCODE_TASKS_DB` (path to `tasks-index.sqlite`)
+## 📡 Bonus: unlock bot group chats (unofficial app patch)
 
-## Costs & safety
+Born from the same project: **bots that refuse group chats**. The
+[`app-patches/`](app-patches/) tool mods the ZCode app bundle so that:
 
-- Every `order`/`status` is a **full agent turn** on the target session (its entire context is loaded — can be 100k+ tokens). Poll on milestones.
-- Headless orders run with the session's permission mode (CLI `-p` defaults to **yolo**) — order sessions you trust.
-- Only supervise sessions you own: an order executes a prompt in that session's context.
-- Prompts sent to a busy session queue until it finishes.
-
-## License
-
-MIT
-
-## Bonus: unlock bot group chats (unofficial app patch)
-
-The Telegram group-chat support this plugin was born from is an app-bundle mod,
-not plugin material — it lives in [`app-patches/`](app-patches/): bots answer in
-groups, every group member can drive them, `@botname` command suffixes parse.
-Byte-exact for macOS ZCode 3.14.3.7762; aborts safely on other versions.
+- 🤖 **Telegram bots answer in groups** — and *every group member* can drive
+  the group's bot (no per-user binding — your friends can code with it too)
+- ⚡ `/new@yourbot` style commands parse correctly (Telegram appends the
+  bot name in groups; that used to be an "unknown command")
+- 💬 **Discord bots** get rich embeds, native slash commands, ephemeral
+  interaction acks, and a token field in the settings UI
 
 ```bash
-python3 app-patches/patch-zcode-bots.py
+python3 app-patches/patch-zcode-bots.py            # telegram groups
+python3 app-patches/patch-zcode-bots.py --discord  # + discord upgrades
+python3 app-patches/patch-zcode-bots.py --restore  # roll back anytime
 ```
+
+Equal-length in-place edits (asar header untouched = macOS-safe), automatic
+backup, idempotent, syntax-verified after patching. Byte-exact for macOS ZCode
+3.14.3.7762 — aborts safely on other versions. **Unofficial app mod; not
+affiliated with the ZCode project.** Details in [`app-patches/README.md`](app-patches/README.md).
+
+## 💰 Costs & safety (read this once)
+
+- Every `order`/`status` is a **full agent turn** on the target session — its
+  entire context is reloaded (100k+ tokens is normal). Poll on milestones.
+- Prompts to a busy session **queue** until it finishes.
+- Headless orders run with the session's permission mode (CLI default: **yolo**).
+  Order sessions you trust; don't `order` sessions you don't own.
+
+## 🧰 Requirements
+
+- ZCode desktop or CLI (macOS/Linux), `node` + `sqlite3` + `python3` on PATH
+- Env overrides: `ZCODE_CLI`, `ZCODE_TASKS_DB`, `ZCODE_APP`
+
+## 📜 Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) — v0.1.1 fixed the order-command bug and
+raised timeouts for long lead missions.
+
+<div align="center">
+
+**Star it if your sessions now have a boss.** ⭐
+
+</div>
