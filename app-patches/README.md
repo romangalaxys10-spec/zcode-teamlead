@@ -73,7 +73,7 @@ script after an update.
 
 ---
 
-## Supervisor mode + native Discord adapter (2026-09-26, `patch-supervisor.py` / `patch-discord-native.py`)
+## Supervisor mode + native Discord adapter (2026-09-26, `patch_supervisor.py` / `patch-discord-native.py` (from `patch_discord.py`))
 
 Two additional patches from a second patch line. **Different mechanism than
 `patch-zcode-bots.py`**: these do a full asar **repack** (extract → patch →
@@ -81,7 +81,7 @@ repack with verified unpacked-set, list parity, sha256 spot-checks) instead of
 equal-length in-place edits. Both approaches work; do NOT stack them on the
 same guard — they touch overlapping anchors.
 
-### `patch-supervisor.py` — nano-supervisor mode (Telegram/Discord bots)
+### `patch_supervisor.py` — nano-supervisor mode (Telegram/Discord bots)
 
 Turns the bot from a doorman into a dispatcher:
 
@@ -97,7 +97,7 @@ Turns the bot from a doorman into a dispatcher:
 Key insight: the one-task-per-bot rule was an artificial per-bot guard — the
 agent engine runs sessions fully in parallel.
 
-### `patch-discord-native.py` — fills the app's reserved `discord:null` slot
+### `patch-discord-native.py` (from `patch_discord.py`) — fills the app's reserved `discord:null` slot
 
 The app ships a Discord entry in the bot-provider picker flagged
 `implemented:!1` and a literal `discord:null` in the adapter registry. This
