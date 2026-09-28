@@ -14,7 +14,7 @@ CHANGES = [
     (
         "readContext: scoped key",
         'async function Ce(h,P){await Fn();let N=(await n.readState()).bots[BZ(P)];',
-        'async function Ce(h,P){await Fn();let ZC_k=BZ(P)+(h.actor.chatType!=="private"&&h.actor.chatId?"::g:"+h.actor.chatId:""),N=(await n.readState()).bots[ZC_k];',
+        'async function Ce(h,P){await Fn();let ZC_k=BZ(P)+(h.chatType!=="private"&&h.chatId?"::g:"+h.chatId:""),N=(await n.readState()).bots[ZC_k];',
     ),
     (
         "readContext: tag migrated context with scope",
