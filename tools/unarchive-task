@@ -1,0 +1,16 @@
+#!/bin/bash
+# unarchive-task — fix accidental "archive" clicks in ZCode desktop.
+#   unarchive-task              list recently archived chats
+#   unarchive-task <text>       unarchive every chat whose title or folder matches <text>
+TI="$HOME/.zcode/v2/tasks-index.sqlite"
+
+if [ -z "$1" ]; then
+  echo "Recently archived chats (newest first):"
+  sqlite3 "$TI" "SELECT datetime(updated_at/1000,'unixepoch')||'  '||archived||'  '||workspace_path||'  ||  '||title FROM tasks WHERE archived=1 AND deleted=0 ORDER BY updated_at DESC LIMIT 15;"
+  echo "Restore one:  unarchive-task '<part of title or folder>'"
+  exit 0
+fi
+
+Q=$(printf %s "$1" | sed "s/'/''/g")
+sqlite3 "$TI" "UPDATE tasks SET archived=0 WHERE archived=1 AND (title LIKE '%$Q%' OR workspace_path LIKE '%$Q%');" || exit 1
+echo "restored: $(sqlite3 "$TI" "SELECT changes();") row(s). If the sidebar doesn't refresh, reopen the project or restart ZCode."

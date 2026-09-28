@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.user.zcode-voice-stt</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/d/.venvs/voice-stt/bin/python3</string>
+    <string>/Users/d/.zcode/voice/stt_server.py</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>ZCODE_STT_MODEL</key><string>mlx-community/whisper-turbo</string>
+    <key>HF_HUB_DISABLE_TELEMETRY</key><string>1</string>
+    <key>PATH</key><string>/Users/d/.local/bin:/Users/d/.local/node-v22/bin:/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+  </dict>
+  <key>ThrottleInterval</key><integer>15</integer>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>StandardOutPath</key><string>/Users/d/.zcode/voice/stt.log</string>
+  <key>StandardErrorPath</key><string>/Users/d/.zcode/voice/stt.log</string>
+</dict>
+</plist>

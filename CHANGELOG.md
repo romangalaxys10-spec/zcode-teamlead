@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 — 2026-09-28
+- `app-patches/patch-supervisor.py` — supervisor mode: bots accept unlimited parallel tasks (busy messages spawn a fresh session instead of the "task still running" refusal), /tasks focus-switching while running, /new while busy, per-task streaming updates
+- `app-patches/patch-discord-native.py` — first-class Discord bot provider: fills the app's reserved `discord:null` registry slot with a REST v10 adapter + Gateway WebSocket runtime (DMs always, guilds on @mention)
+- `app-patches/asar_{unpacked_list,spotcheck}.py` — asar verification helpers (unpacked-set listing, sha256 spot-checks)
+- `voice-input/` — fully local voice dictation for the ZCode chat input (mlx-whisper service :8399 + Alt+V hold-to-talk renderer injection + LaunchAgent + 12-test closed-loop rig)
+- `tools/unarchive-task` — one-liner fix for accidentally archived chats (flips `archived` in the desktop tasks-index SQLite)
+- README: patches guide table comparing queue-vs-parallel mechanisms
+
 ## 0.3.0 — 2026-09-26
 - `hire --plan` — spawn READ-ONLY workers (plan mode): QA/review lanes that run in parallel with writers
 - `broadcast` — one order to every rostered worker

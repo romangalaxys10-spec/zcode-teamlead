@@ -115,6 +115,15 @@ backup, idempotent, syntax-verified after patching. Byte-exact for macOS ZCode
 3.14.3.7762 — aborts safely on other versions. **Unofficial app mod; not
 affiliated with the ZCode project.** Details in [`app-patches/README.md`](app-patches/README.md).
 
+## 🩺 Maintenance tools
+
+- `tools/unarchive-task` — accidentally archived a chat/project? `unarchive-task '<name>'`
+  flips it back in the desktop tasks-index (see `agents/zcode/2026-09-24` learnings).
+- `app-patches/` — supervisor mode (parallel bot tasks), native Discord provider,
+  asar verify helpers. See its README for queue-vs-parallel trade-offs.
+- `voice-input/` — hold **Alt+V**, talk, transcript lands at the caret. Fully local
+  mlx-whisper; install guide + 12-test rig included.
+
 ## 💰 Costs & safety (read this once)
 
 - Every `order`/`status` is a **full agent turn** on the target session — its

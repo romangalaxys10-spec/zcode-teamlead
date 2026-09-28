@@ -70,3 +70,64 @@ script after an update.
   answer every message
 - any group member can drive the bot once it's in the group — keep groups to
   people you trust (the bot executes on your machine)
+
+---
+
+## Supervisor mode + native Discord adapter (2026-09-26, `patch-supervisor.py` / `patch-discord-native.py`)
+
+Two additional patches from a second patch line. **Different mechanism than
+`patch-zcode-bots.py`**: these do a full asar **repack** (extract → patch →
+repack with verified unpacked-set, list parity, sha256 spot-checks) instead of
+equal-length in-place edits. Both approaches work; do NOT stack them on the
+same guard — they touch overlapping anchors.
+
+### `patch-supervisor.py` — nano-supervisor mode (Telegram/Discord bots)
+
+Turns the bot from a doorman into a dispatcher:
+
+- **never refuses** — a message while a task runs spawns a **fresh parallel
+  session** and submits there (ACKs: "🧵 New parallel task started"), instead of
+  the "task is still running" bounce
+- **real-time updates per task** via the native streaming reply mode
+- **/tasks can switch focus while tasks run** (busy guard removed)
+- **/new works while busy** (busy guard removed)
+- `/stop` stops only the *focused* (newest) task; `/tasks` first to focus an
+  older one. FIFO submission order = priority; stop+resubmit to jump the queue.
+
+Key insight: the one-task-per-bot rule was an artificial per-bot guard — the
+agent engine runs sessions fully in parallel.
+
+### `patch-discord-native.py` — fills the app's reserved `discord:null` slot
+
+The app ships a Discord entry in the bot-provider picker flagged
+`implemented:!1` and a literal `discord:null` in the adapter registry. This
+patch adds the missing first-class adapter:
+
+- full provider interface (test / resolveName / send with 1900-char chunking /
+  sendTyping / parseCallback) over Discord REST v10
+- **Gateway WebSocket runtime** (identify, heartbeat, reconnect backoff,
+  intents 34304) with an 8s reconcile tick mirroring the telegram/feishu
+  channel runtimes — DMs always answered, guild messages on @mention
+- renderer: Discord flipped to implemented + i18n token hints (zh+en)
+
+You bring the bot: discord.com/developers → New Application → Bot → Reset
+Token → enable **Message Content Intent** → invite (scopes=bot; Send Messages +
+Read Message History) → ZCode Bots → new bot → Discord → paste token.
+
+### Verify tools
+
+- `asar_unpacked_list.py <asar>` — list entries the header marks `unpacked`
+- `asar_spotcheck.py <asar> <srcdir> [n]` — sha256-compare n random packed
+  files against the source tree (repak verification)
+
+### Relation to `patch-zcode-bots.py`
+
+| | patch-zcode-bots.py | supervisor + discord-native |
+|---|---|---|
+| method | equal-length in-place edits (asar integrity untouched) | full extract→patch→repack |
+| busy messages | ACK + queue, deliver after current task | spawn parallel task immediately |
+| discord | upgrades a community adapter (rich embeds, slash commands) | creates the native adapter from `discord:null` |
+| pick when | you want queued, serialized reports in groups | you want parallel workers + first-class Discord |
+
+Run one OR the other per guard — not both. Both are idempotent and abort
+loudly when anchors don't match your app version. Back up `app.asar` first.
