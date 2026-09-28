@@ -253,11 +253,71 @@ def cmd_sched_state(args):
     return 0
 
 
+
+
+def cmd_queue(args):
+    import time as _t
+    p = os.path.join(STATE_DIR, "queue.json")
+    try:
+        q = json.load(open(p))
+    except Exception:
+        q = []
+    if not args or args[0] == "list":
+        for i, item in enumerate(q):
+            print(f"{i}  p{item.get('p', 2)}  {item.get('added', '')[:16]}  {item.get('text', '')[:80]}")
+        print(f"({len(q)} queued)") if not q else None
+        return 0
+    if args[0] == "add":
+        pri = 2
+        rest = args[1:]
+        if rest and re.fullmatch(r"p[1-3]", rest[0]):
+            pri = int(rest[0][1]); rest = rest[1:]
+        text = " ".join(rest).strip()
+        if not text:
+            print("usage: queue add [p1|p2|p3] <text>"); return 1
+        q.append({"p": pri, "text": text, "added": _t.strftime("%F %T")})
+        q.sort(key=lambda x: (x.get("p", 2), x.get("added", "")))
+        json.dump(q, open(p, "w"), indent=1)
+        print(f"queued (p{pri}): {text[:70]}")
+        return 0
+    if args[0] == "drop":
+        idx = int(args[1]); removed = q.pop(idx)
+        json.dump(q, open(p, "w"), indent=1)
+        print("dropped:", removed.get("text", "")[:60]); return 0
+    print("usage: queue list | add [pN] <text> | drop <idx>")
+    return 1
+
+
+def cmd_attach(args):
+    once = "--once" in args
+    args = [a for a in args if a != "--once"]
+    sess, nick = resolve(args[0] if args else None)
+    since = time.time() * 1000 - 10 * 60 * 1000
+    seen = 0
+    while True:
+        rows = []
+        for e in iter_events(sess, since):
+            ev = e.get("event", "")
+            if any(k in ev for k in ("turn.", "error", "permission", "task_")):
+                rows.append((e.get("timestamp", "")[11:19], ev, (e.get("message") or "")[:90]))
+        for r in rows[seen:]:
+            print(*r)
+        seen = len(rows)
+        if once:
+            return 0
+        time.sleep(10)
+        since = time.time() * 1000 - 60000
+
+
+LIB_TABLE = {"queue": cmd_queue, "attach": cmd_attach}
+if "LIB_TABLE" not in dir():
+    pass
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print(__doc__); sys.exit(1)
     os.makedirs(STATE_DIR, exist_ok=True)
-    fn = {"feed": cmd_feed, "perms": cmd_perms, "burn": cmd_burn, "handoff": cmd_handoff, "sched-state": cmd_sched_state}.get(sys.argv[1])
+    fn = {"feed": cmd_feed, "perms": cmd_perms, "burn": cmd_burn, "handoff": cmd_handoff, "sched-state": cmd_sched_state, "queue": cmd_queue, "attach": cmd_attach}.get(sys.argv[1])
     if not fn:
         print(f"unknown: {sys.argv[1]}"); sys.exit(1)
     sys.exit(fn(sys.argv[2:]))

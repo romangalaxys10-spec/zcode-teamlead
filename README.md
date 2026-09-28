@@ -27,6 +27,9 @@ You run one session. It runs the team.
 | `team.sh status <sessId>` | 🔍 3-line check-in: **Task / Progress / Blockers** |
 | `team.sh order <sessId> <msg>` | 🎯 Injects a directive **into** that session — it executes with its full context and replies |
 | `team.sh title <sessId>` | 🏷️ Session title lookup |
+| `team.sh queue add [pN] <text>` | 📬 Persistent prioritized follow-up queue |
+| `team.sh attach <nick>` | 📺 Live tail of a worker (OpenMuse-style takeover view) |
+| `team.sh takeover <nick>` | 🖥️ Open that worker's workspace in ZCode desktop |
 | `team.sh feed [nick]` | 📡 Live event tap — per-worker milestones in real time |
 | `team.sh perms --push` | 🔔 Surface pending permission prompts (workers never stall silently) |
 | `team.sh burn [--days D]` | 💸 Token/cost telemetry per session (TEAM_BUDGET_TOKENS ceiling) |

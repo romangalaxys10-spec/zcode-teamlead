@@ -387,5 +387,33 @@ print("ALL APPLIED" if ok else "DRIFT DETECTED - reapply needed")'
       *) echo "usage: team.sh patches status|reapply [--yes]";;
     esac ;;
 
-  *) echo "usage: team.sh feed [nick|--lines N] | perms [--minutes M|--push] | burn [--days D] [nick] | handoff <id|nick> [out.md] | plan <goals.json> | tick | done <taskId> | qa <id|nick> [--dry-run] | register <nick> k=v... | dispatch [--dry-run] [cap:tags] <task...> | gate <ws> <stage> pass|fail|status | rollback <ws> <tag> [--force] | patches status | list | roster | all-status | status <id|nick> | order <id|nick> <msg...> | nudge <id|nick> | broadcast <msg...> | tell <from> <to> <msg...> | proof <id|nick> | standup | notify <text...> | watch [sec] | deploy-lock acquire|release|status <nick> [ws] | autopoll on [min]|off|run | hire <nick> <wsDir> [--plan] [mission] | title <id|nick>" ;;
+
+  queue)
+    python3 "$LEADLIB" queue "${@:-list}" ;;
+  attach)
+    [ -z "$1" ] && { echo "usage: team.sh attach <sessId|nick> [--once]"; exit 1; }
+    python3 "$LEADLIB" attach "$@" ;;
+  takeover)
+    id=$(resolve "$1"); [ -z "$id" ] && { echo "usage: team.sh takeover <sessId|nick>"; exit 1; }
+    ws=$(sqlite3 "$DB" "SELECT workspace_path FROM tasks WHERE task_id='$id' LIMIT 1")
+    [ -d "$ws" ] || { echo "unknown workspace: $ws"; exit 1; }
+    enc=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))" "$ws")
+    open "zcode://workspace/open?path=$enc" && echo "takeover: opened $ws in ZCode desktop" ;;
+  receipts)
+    n="${1:-15}"
+    tail -n "$n" "${ROSTER%.json}-receipts.txt" 2>/dev/null || echo "(no receipts yet)" ;;
+  loop)
+    mins="${1:-10}"
+    while :; do
+      "$0" tick || true
+      [ -n "$TEAM_WEBHOOK" ] && "$0" notify "loop tick $(date '+%H:%M')" >/dev/null
+      sleep $((mins * 60))
+    done ;;
+  cards)
+    st="${1:-status}"
+    echo "=== $(date '+%F %T') ==="
+    "$0" "$st" | while IFS= read -r l; do echo "│ $l"; done
+    echo "└────────────────────" ;;
+
+  *) echo "usage: team.sh queue add|list|drop | attach <id|nick> [--once] | takeover <id|nick> | receipts [n] | loop [min] | cards <cmd> | feed [nick|--lines N] | perms [--minutes M|--push] | burn [--days D] [nick] | handoff <id|nick> [out.md] | plan <goals.json> | tick | done <taskId> | qa <id|nick> [--dry-run] | register <nick> k=v... | dispatch [--dry-run] [cap:tags] <task...> | gate <ws> <stage> pass|fail|status | rollback <ws> <tag> [--force] | patches status | list | roster | all-status | status <id|nick> | order <id|nick> <msg...> | nudge <id|nick> | broadcast <msg...> | tell <from> <to> <msg...> | proof <id|nick> | standup | notify <text...> | watch [sec] | deploy-lock acquire|release|status <nick> [ws] | autopoll on [min]|off|run | hire <nick> <wsDir> [--plan] [mission] | title <id|nick>" ;;
 esac

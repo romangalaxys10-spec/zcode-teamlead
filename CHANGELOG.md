@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-09-28 (OpenMuse-inspired powers)
+- `queue add [pN] <text>` / `list` / `drop` — persistent prioritized follow-up queue (survives restarts)
+- `attach <nick> [--once]` — live tail of a worker's event stream (OpenMuse 'take control' view)
+- `takeover <nick>` — opens the worker's workspace in ZCode desktop via the `zcode://workspace/open` deep link
+- `receipts [n]` — audit trail of executed lead commands
+- `loop <min>` — combined daemon: scheduler tick + notify
+- `cards <cmd>` — boxed rich output for any team command
+
 ## 0.5.0 — 2026-09-28
 - `feed` — live event tap: real-time per-worker milestones from the host jsonl stream
 - `perms [--push]` — permission-prompt surfacing (detect + relay; workers never stall silently)
