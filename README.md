@@ -37,6 +37,7 @@ You run one session. It runs the team.
 | `team.sh dispatch [cap:tags] <task>` | ⚖️ Route to the idlest capable worker |
 | `team.sh gate <ws> <stage> pass\|fail` | 🚦 Lifecycle gates + `rollback <ws> <tag>` |
 | `team.sh patches status` | 🩹 Patch fleet drift detection + guarded re-apply |
+| `patch-watch` agent | 🔄 Auto re-applies all app patches within 5 min of any ZCode update (LaunchAgent, see app-patches/README.md) |
 
 Under the hood: ZCode's CLI can resume any persisted session and inject a prompt
 (`zcode --resume <sessId> -p "..." --json`). This plugin turns that into a
