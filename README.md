@@ -27,6 +27,16 @@ You run one session. It runs the team.
 | `team.sh status <sessId>` | 🔍 3-line check-in: **Task / Progress / Blockers** |
 | `team.sh order <sessId> <msg>` | 🎯 Injects a directive **into** that session — it executes with its full context and replies |
 | `team.sh title <sessId>` | 🏷️ Session title lookup |
+| `team.sh feed [nick]` | 📡 Live event tap — per-worker milestones in real time |
+| `team.sh perms --push` | 🔔 Surface pending permission prompts (workers never stall silently) |
+| `team.sh burn [--days D]` | 💸 Token/cost telemetry per session (TEAM_BUDGET_TOKENS ceiling) |
+| `team.sh plan <goals.json>` + `tick` | 🧩 Goal-DAG scheduler: dependency-ordered auto-distribution |
+| `team.sh handoff <id|nick>` | 📦 Context handoff pack for cheap session respawn |
+| `team.sh qa <id|nick>` | 🧪 Adversarial QA lane — fresh reviewer attacks the changes |
+| `team.sh register <nick> k=v` | 🧠 Worker capability registry |
+| `team.sh dispatch [cap:tags] <task>` | ⚖️ Route to the idlest capable worker |
+| `team.sh gate <ws> <stage> pass\|fail` | 🚦 Lifecycle gates + `rollback <ws> <tag>` |
+| `team.sh patches status` | 🩹 Patch fleet drift detection + guarded re-apply |
 
 Under the hood: ZCode's CLI can resume any persisted session and inject a prompt
 (`zcode --resume <sessId> -p "..." --json`). This plugin turns that into a

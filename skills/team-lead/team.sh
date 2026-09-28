@@ -5,6 +5,8 @@ DB="${ZCODE_TASKS_DB:-$HOME/.zcode/v2/tasks-index.sqlite}"
 ROSTER="${ZCODE_TEAM_ROSTER:-$HOME/.zcode/team-roster.json}"
 export ZCODE_TEAM_ROSTER="$ROSTER"
 ZC="${ZCODE_CLI:-/Applications/ZCode.app/Contents/Resources/glm/zcode.cjs}"
+LEADLIB="$(cd "$(dirname "$0")" && pwd)/leadlib.py"
+TEAM_DRY="${TEAM_DRY_RUN:-0}"
 cmd="$1"; [ $# -gt 0 ] && shift
 
 resolve() { # nickname-or-sessId -> sessId
@@ -186,5 +188,204 @@ except Exception: r = {}
         [ -n "$TEAM_WEBHOOK" ] && "$0" notify "🤖 autopoll ran — see log ($log)" ;;
       *) echo "usage: team.sh autopoll on [minutes] | off | run" ;;
     esac ;;
-  *) echo "usage: team.sh list | roster | all-status | status <id|nick> | order <id|nick> <msg...> | nudge <id|nick> | broadcast <msg...> | tell <from> <to> <msg...> | proof <id|nick> | standup | notify <text...> | watch [sec] | deploy-lock acquire|release|status <nick> [ws] | autopoll on [min]|off|run | hire <nick> <wsDir> [--plan] [mission] | title <id|nick>" ;;
+
+  feed)
+    python3 "$LEADLIB" feed "$@" ;;
+  perms)
+    if [ "${1:-}" = "--push" ]; then shift; python3 "$LEADLIB" perms "$@" | while IFS= read -r l; do echo "$l"; "$0" notify "$l"; done
+    else python3 "$LEADLIB" perms "$@"; fi ;;
+  burn)
+    python3 "$LEADLIB" burn "$@" ;;
+  handoff)
+    python3 "$LEADLIB" handoff "$@" ;;
+  plan)
+    f="$1"; [ -f "$f" ] || { echo "usage: team.sh plan <goals.json>  ({tasks:[{id,needs:[],goal,nick}]})"; exit 1; }
+    GOALS="$f" python3 -c '
+import json, os, sys
+g = json.load(open(os.environ["GOALS"]))
+tasks = g.get("tasks", [])
+ids = {t["id"] for t in tasks}
+bad = [n for t in tasks for n in t.get("needs", []) if n not in ids]
+if bad:
+    print("unknown deps:", bad); sys.exit(1)
+for t in tasks:
+    if not t.get("id"):
+        print("task missing id"); sys.exit(1)
+    for field in ("id", "goal", "nick"):
+        v = str(t.get(field, ""))
+        if "\n" in v or "\t" in v:
+            print("task", t["id"], "field", field, "must not contain newlines/tabs"); sys.exit(1)
+state = {"tasks": tasks, "done": []}
+p = os.path.join(os.environ.get("ZCODE_TEAM_STATE", os.path.expanduser("~/.zcode/team-lead")), "scheduler.json")
+os.makedirs(os.path.dirname(p), exist_ok=True)
+json.dump(state, open(p, "w"), indent=1)
+print("plan loaded:", len(tasks), "tasks ->", p)' ;;
+  done)
+    tid="$1"; [ -z "$tid" ] && { echo "usage: team.sh done <taskId>"; exit 1; }
+    TID="$tid" python3 -c '
+import json, os
+p = os.path.join(os.environ.get("ZCODE_TEAM_STATE", os.path.expanduser("~/.zcode/team-lead")), "scheduler.json")
+try: s = json.load(open(p))
+except Exception: s = {}
+s.setdefault("done", []).append(os.environ["TID"])
+json.dump(s, open(p, "w"), indent=1)
+print("marked done:", os.environ["TID"])' ;;
+  tick)
+    TICKF=$(mktemp)
+    ZCODE_TEAM_STATE="${ZCODE_TEAM_STATE:-$HOME/.zcode/team-lead}" python3 -c '
+import json, os, sys
+p = os.path.join(os.environ["ZCODE_TEAM_STATE"], "scheduler.json")
+try:
+    s = json.load(open(p))
+except FileNotFoundError:
+    sys.exit(0)
+except Exception as e:
+    print("WARN: corrupt scheduler state, skipping tick:", e, file=sys.stderr); sys.exit(0)
+done = set(s.get("done", []))
+for t in s.get("tasks", []):
+    if t["id"] in done:
+        continue
+    wait = [n for n in t.get("needs", []) if n not in done]
+    if wait:
+        print("BLOCKED\t" + t["id"] + "\t\twaiting on: " + ", ".join(wait))
+    else:
+        print("READY\t" + t["id"] + "\t" + t.get("nick", "") + "\t" + t.get("goal", ""))
+' > "$TICKF"
+    rc=0
+    while IFS="$(printf '\t')" read -r kind tid nick goal; do
+      case "$kind" in
+        BLOCKED) echo "PAUSED $tid - $goal";;
+        READY)
+          if [ "$TEAM_DRY" = "1" ]; then
+            echo "(dry) would order ${nick:-$tid}: $goal"
+          else
+            echo "ordering ${nick:-$tid}: $goal"
+            if "$0" order "${nick:-$tid}" "$goal"; then
+              "$0" done "$tid"
+            else
+              echo "order FAILED for $tid - left pending, retry next tick"
+              rc=1
+            fi
+          fi;;
+      esac
+    done < "$TICKF"
+    rm -f "$TICKF"; exit $rc ;;
+  qa)
+    raw="$1"; [ -z "$raw" ] && { echo "usage: team.sh qa <sessId|nick> [--dry-run]"; exit 1; }
+    id=$(resolve "$raw")
+    prompt="ADVERSARIAL QA REVIEW: you are a fresh, read-only reviewer with NO stake in the prior work. 1) Write 3-6 concrete edge-case/attack tests this workspace's recent changes must survive (boundaries, empty, concurrency, unicode, security). 2) Attempt to BREAK the recent changes - run the focused checks, try the attacks. 3) Report findings as BLOCKER/MAJOR/MINOR with file:line evidence, or PASS with the checks you ran. Never trust the implementer's claims; verify by execution."
+    case "${2:-}" in
+      --dry-run) echo "QA PROMPT (dry): $prompt"; exit 0;;
+    esac
+    ws=$(sqlite3 "$DB" "SELECT workspace_path FROM tasks WHERE task_id='$id' LIMIT 1")
+    [ -d "$ws" ] || { echo "unknown workspace for $raw"; exit 1; }
+    qa_name="qa-$(date +%s)"
+    "$0" hire "$qa_name" "$ws" "--plan $prompt" || exit 1
+    "$0" order "$qa_name" "Proceed with the adversarial review per your role. Report BLOCKER/MAJOR/MINOR with evidence, or PASS with executed checks." ;;
+  register)
+    nick="$1"; shift
+    [ -z "$nick" ] && { echo "usage: team.sh register <nick> key=value ...  (e.g. caps=algo,rust model=glm)"; exit 1; }
+    NICK="$nick" KV="$*" python3 -c '
+import json, os
+p = os.environ["ZCODE_TEAM_ROSTER"]
+try: r = json.load(open(p))
+except Exception: r = {}
+e = r.setdefault(os.environ["NICK"], {})
+for kv in os.environ["KV"].split():
+    k, _, v = kv.partition("=")
+    e[k] = v.split(",") if "," in v else v
+json.dump(r, open(p, "w"), indent=1)
+print("registered:", os.environ["NICK"], e)' ;;
+  dispatch)
+    caps=""; dry=""; task=""
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        cap:*) caps="${1#cap:}";;
+        --dry-run) dry=1;;
+        *) task="$task $1";;
+      esac
+      shift
+    done
+    task="${task# }"
+    [ -z "$task" ] && { echo "usage: team.sh dispatch [--dry-run] [cap:tags] <task...>"; exit 1; }
+    CHOICE=$(ZCODE_SESSION_DB="${ZCODE_SESSION_DB:-$HOME/.zcode/cli/db/db.sqlite}" CAPS="$caps" RST="$ROSTER" python3 -c '
+import json, os, sqlite3, time
+roster = json.load(open(os.environ["RST"]))
+caps = set(filter(None, os.environ["CAPS"].split(",")))
+con = sqlite3.connect(os.environ["ZCODE_SESSION_DB"])
+since = (time.time() - 3600) * 1000
+cands = []
+for nick, v in roster.items():
+    rcaps = set(v.get("caps", [])) if isinstance(v.get("caps"), list) else set()
+    if caps and not (rcaps & caps):
+        continue
+    sid = v.get("sessId", "")
+    if not sid.startswith("sess_"):
+        continue
+    row = con.execute("SELECT sum(CASE WHEN status=:s THEN 1 ELSE 0 END), coalesce(max(started_at),0) FROM turn_usage WHERE session_id=:i", {"s": "running", "i": sid}).fetchone()
+    running, last = row if row else (0, 0)
+    cands.append((running or 0, -(last or 0), nick, sid))
+cands.sort()
+print(cands[0][3] if cands else "")')
+    [ -z "$CHOICE" ] && { echo "no capable worker found"; exit 1; }
+    if [ -n "$dry" ]; then echo "(dry) would dispatch to: $CHOICE - task:$task"; exit 0; fi
+    echo "dispatching to $CHOICE"
+    "$0" order "$CHOICE" "$task" ;;
+  gate)
+    ws="$1"; stage="$2"; verdict="$3"
+    if [ "$verdict" = "status" ]; then
+      cat "$ws/.team-gates.json" 2>/dev/null || echo "(no gates recorded for $ws)"
+    else
+      GATE_WS="$ws" GATE_STAGE="$stage" GATE_VERDICT="$verdict" python3 -c '
+import json, os, time
+gf = os.path.join(os.environ["GATE_WS"], ".team-gates.json")
+try: g = json.load(open(gf))
+except Exception: g = {}
+g[os.environ["GATE_STAGE"]] = {"verdict": os.environ["GATE_VERDICT"], "at": time.strftime("%F %T")}
+json.dump(g, open(gf, "w"), indent=1)
+print("gate", os.environ["GATE_STAGE"], "=", os.environ["GATE_VERDICT"])'
+    fi ;;
+
+  rollback)
+    ws="$1"; tag="$2"; force="${3:-}"
+    [ -d "$ws" ] || { echo "no dir: $ws"; exit 1; }
+    if [ "$force" = "--force" ]; then
+      (cd "$ws" && git reset --hard "$tag" && echo "rolled back to $tag") || echo "rollback FAILED"
+    else
+      echo "(dry) would run: cd $ws && git reset --hard $tag   - add --force to execute"
+    fi ;;
+  patches)
+    op="${1:-status}"
+    case "$op" in
+      status)
+        APP_ASAR="${ZCODE_APP_ASAR:-/Applications/ZCode.app/Contents/Resources/app.asar}" python3 -c '
+import json, struct, os
+p = os.environ["APP_ASAR"]
+f = open(p, "rb"); f.seek(4); hs = struct.unpack("<I", f.read(4))[0]
+f.seek(16); h = json.loads(f.read(hs-8).rstrip(b"\0"))
+node = h["files"]["out"]["files"]["host"]["files"]["index.js"]
+f.seek(8 + hs + int(node["offset"])); src = f.read(node["size"]).decode("utf-8", "replace")
+pkg = h["files"]["package.json"]
+f.seek(8 + hs + int(pkg["offset"])); pkgsrc = f.read(pkg["size"]).decode()
+checks = [("supervisor mode", "ZCODE_SUPERVISOR_V1" in src), ("group chats", "ZCODE_GROUPS_V1" in src),
+          ("discord adapter", "ZCODE_discordAdapter" in src), ("voice bootstrap", "voice-bootstrap" in pkgsrc)]
+print("=== patch fleet status ===")
+ok = True
+for name, present in checks:
+    print(("APPLIED " if present else "MISSING "), name)
+    ok = ok and present
+print("ALL APPLIED" if ok else "DRIFT DETECTED - reapply needed")'
+        ;;
+      reapply)
+        if [ "${2:-}" = "--yes" ] && [ -f "$HOME/.zcode/scripts/reapply_all.sh" ]; then
+          bash "$HOME/.zcode/scripts/reapply_all.sh"
+        elif [ "${2:-}" = "--yes" ]; then
+          echo "reapply_all.sh missing (see tools/reapply-patches.sh)"
+        else
+          echo "this re-patches the installed app; confirm with: team.sh patches reapply --yes"
+        fi ;;
+      *) echo "usage: team.sh patches status|reapply [--yes]";;
+    esac ;;
+
+  *) echo "usage: team.sh feed [nick|--lines N] | perms [--minutes M|--push] | burn [--days D] [nick] | handoff <id|nick> [out.md] | plan <goals.json> | tick | done <taskId> | qa <id|nick> [--dry-run] | register <nick> k=v... | dispatch [--dry-run] [cap:tags] <task...> | gate <ws> <stage> pass|fail|status | rollback <ws> <tag> [--force] | patches status | list | roster | all-status | status <id|nick> | order <id|nick> <msg...> | nudge <id|nick> | broadcast <msg...> | tell <from> <to> <msg...> | proof <id|nick> | standup | notify <text...> | watch [sec] | deploy-lock acquire|release|status <nick> [ws] | autopoll on [min]|off|run | hire <nick> <wsDir> [--plan] [mission] | title <id|nick>" ;;
 esac

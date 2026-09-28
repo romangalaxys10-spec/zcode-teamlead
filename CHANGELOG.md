@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 — 2026-09-28
+- `feed` — live event tap: real-time per-worker milestones from the host jsonl stream
+- `perms [--push]` — permission-prompt surfacing (detect + relay; workers never stall silently)
+- `burn [--days D]` — token/cost telemetry per session from turn_usage (TEAM_BUDGET_TOKENS ceiling)
+- `plan <goals.json>` + `tick` + `done` — goal-DAG scheduler: dependency-ordered task distribution, failed orders stay pending
+- `handoff <id|nick>` — context handoff pack (title/ws/turn stats/milestones) for cheap session respawn
+- `qa <id|nick>` — adversarial QA lane: fresh read-only reviewer attacks the recent changes (BLOCKER/MAJOR/MINOR or PASS)
+- `register <nick> k=v...` — worker capability registry (caps/models/lanes)
+- `dispatch [cap:tags] <task>` — load-balanced task routing to the idlest capable worker
+- `gate <ws> <stage> pass|fail|status` + `rollback <ws> <tag> [--force]` — lifecycle gates with dry-run-first rollback
+- `patches status|reapply` — patch fleet drift detection + guarded re-apply (tools/reapply-patches.sh)
+- `tests/run_tests.sh` — 14 headless tests covering every addition (all green)
+
 ## 0.4.0 — 2026-09-28
 - `app-patches/patch-groups.py` — re-enable Telegram group chats (lost in the 3.14.3 update): replies route to the group, members authorized by botId, @BotName command suffix stripped
 - `app-patches/patch-supervisor.py` — supervisor mode: bots accept unlimited parallel tasks (busy messages spawn a fresh session instead of the "task still running" refusal), /tasks focus-switching while running, /new while busy, per-task streaming updates
