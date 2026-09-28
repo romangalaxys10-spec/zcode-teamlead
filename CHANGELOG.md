@@ -14,6 +14,7 @@
 - `tests/run_tests.sh` — 14 headless tests covering every addition (all green)
 
 ## 0.4.0 — 2026-09-28
+- supervisor v5 (`patch_supervisor_v5.py`) — working heartbeat: the native typing indicator now starts at task SUBMIT (it previously only started after permission/elicitation resolution), so Telegram/Discord show continuous activity during long tool runs instead of silence
 - supervisor v4 (`patch_supervisor_v4.py`) — `/queue` command (running-task list with focused marker, registered in the Telegram menu), spawn notices now name the new task (sanitized slug); note: approve/deny permission buttons for bot-driven tasks are native since 3.14 (see app-patches/README.md)
 - supervisor v3 (`patch_supervisor_v3.py`) — `/task` picker pagination: 10 per page with a `Next page` option, `/task 2` page jumps; `patch-watch.sh` + LaunchAgent `com.user.zcode-patch-watch` — auto re-applies the whole patch fleet within 5 min of a ZCode app update
 - supervisor v2 (`patch_supervisor_v2.py`) — `/task` unfenced: the session/task picker no longer refuses while busy (that guard survived the original supervisor patch), and `/task` is now registered in the Telegram command menu
