@@ -14,6 +14,7 @@
 - `tests/run_tests.sh` — 14 headless tests covering every addition (all green)
 
 ## 0.4.0 — 2026-09-28
+- supervisor v9 (`patch_supervisor_v9.py`) — CRITICAL fix: removed the v3 numeric page-jump intercept — Telegram task buttons decode to `/task <optionIndex>`, which the intercept hijacked as page jumps, re-rendering the picker on every tap. `/task <n>` is native select-Nth again; pagination advances only via the `Next page` option (`__next__` token)
 - supervisor v8 (`patch_supervisor_v8.py`) — group callback queries (inline-button taps) now carry the group chat id as actor identity, matching message actors — fixes /task selection buttons re-rendering the picker instead of confirming (pending-selection key mismatch)
 - supervisor v7 (`patch_supervisor_v7.py`) — `/task` FOCUS LOCK: selecting a session stamps the context (`_lock:1`) so the busy-spawn skips locked groups and messages submit INTO the selected session (running or not); `/new` clears the lock
 - supervisor v6 (`patch_supervisor_v6.py`) — PER-GROUP ISOLATION: bot context (project/session/mode) gets a scoped state key per group chat (`botId::g:<chatId>`), so `/project`/`/task`/`/new`/`/stop` in one Telegram group never affect another group or private chats. Private chats keep the original unscoped key; telegram offset stays bot-level (single poller)
