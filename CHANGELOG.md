@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.6.0 — 2026-09-28 (OpenMuse-inspired powers)
+- `auto [--run] <task text>` — AUTO-TRIGGER router: classifies a given task (web/browser, parallel, pdf, mirror, sandbox) and routes it to the right capability; SKILL.md now carries auto-trigger phrases so ZCode invokes the skill from task text automatically
 - agent-computer UNIVERSAL: Docker container terminals on Linux hosts (sandbox-exec fallback on macOS), CDP browser automation (navigate/text/title/eval/screenshot per worker), live browser mirroring with self-refreshing viewer, auto-relaunch of dead worker browsers; uses dedicated Chrome-for-Testing binary when present
 - voice-input REAL-TIME: `rtstt_server.py` (:8398, faster-whisper CPU streaming over WebSocket, rolling partials) + `voice-inject.js` upgraded to live captions (partials in pill, insert-on-release, batch :8399 fallback) + mic button docked next to the composer usage control; bootstrap now prefers `~/.zcode/voice/voice-inject.js` for hot updates
 - `skills/agent-computer/` — OpenMuse 'agent computer' port (macOS edition): persistent per-worker Chrome profiles with takeover, sandbox-exec worker terminal with receipts, PDF drop/exchange zone (cupsfilter/textutil); SKILL.md included

@@ -460,5 +460,59 @@ open(p, "a").write(out + "\n")
 print(out)'
     ;;
 
-  *) echo "usage: team.sh queue add|list|drop | attach <id|nick> [--once] | takeover <id|nick> | receipts [n] | loop [min] | cards <cmd> | feed [nick|--lines N] | perms [--minutes M|--push] | burn [--days D] [nick] | handoff <id|nick> [out.md] | plan <goals.json> | tick | done <taskId> | qa <id|nick> [--dry-run] | register <nick> k=v... | dispatch [--dry-run] [cap:tags] <task...> | gate <ws> <stage> pass|fail|status | rollback <ws> <tag> [--force] | patches status | list | roster | all-status | status <id|nick> | order <id|nick> <msg...> | nudge <id|nick> | broadcast <msg...> | tell <from> <to> <msg...> | proof <id|nick> | standup | notify <text...> | watch [sec] | deploy-lock acquire|release|status <nick> [ws] | autopoll on [min]|off|run | hire <nick> <wsDir> [--plan] [mission] | title <id|nick>" ;;
+
+  auto)
+    # auto-trigger router: classify a task, route to the right capability
+    dry=""
+    for a in "$@"; do [ "$a" = "--run" ] && dry="run"; done
+    task=$(echo "$@" | sed 's/--run//')
+    [ -z "${task// }" ] && { echo "usage: team.sh auto [--run] <task text>"; exit 1; }
+    tl=$(printf '%s' "$task" | tr '[:upper:]' '[:lower:]')
+    route="shell"; why=""
+    case "$tl" in
+      *website*|*web*|*browser*|*browse*|*http*|*url*|*click*|*scrape*|*screenshot*) route="browser"; why="web/browser task";;
+      *parallel*|*multiple*|*team*|*workers*|*several*|*split*) route="dispatch"; why="parallelizable task";;
+      *pdf*|*document*|*report*) route="pdf"; why="document output";;
+      *watch*|*monitor*|*live*) route="mirror"; why="live observation";;
+      *isolated*|*sandbox*|*container*|*safe*) route="sandbox"; why="isolation requested";;
+    esac
+    echo "route: $route ($why)"
+    [ "$dry" = "run" ] || { echo "(dry-run: add --run to execute)"; exit 0; }
+    case "$route" in
+      browser) "$0" browser-open auto "https://example.com" >/dev/null; "$0" cdp auto text | head -30 ;;
+      dispatch) "$0" dispatch "$task" ;;
+      pdf) echo "pdf route: use 'pdfdrop <file>' after producing the document" ;;
+      mirror) "$0" mirror auto 2 8766 ;;
+      sandbox) echo "sandbox route: use 'agent-computer.sh term-exec <nick> <ws> <cmd>'" ;;
+      *) echo "no specialist route - default: order/dispatch to a worker" ;;
+    esac ;;
+
+
+  auto)
+    # auto-trigger router: classify a task, route to the right capability
+    dry=""
+    for a in "$@"; do [ "$a" = "--run" ] && dry="run"; done
+    task=$(echo "$@" | sed 's/--run//')
+    [ -z "${task// }" ] && { echo "usage: team.sh auto [--run] <task text>"; exit 1; }
+    tl=$(printf '%s' "$task" | tr '[:upper:]' '[:lower:]')
+    route="shell"; why=""
+    case "$tl" in
+      *website*|*web*|*browser*|*browse*|*http*|*url*|*click*|*scrape*|*screenshot*) route="browser"; why="web/browser task";;
+      *parallel*|*multiple*|*team*|*workers*|*several*|*split*) route="dispatch"; why="parallelizable task";;
+      *pdf*|*document*|*report*) route="pdf"; why="document output";;
+      *watch*|*monitor*|*live*) route="mirror"; why="live observation";;
+      *isolated*|*sandbox*|*container*|*safe*) route="sandbox"; why="isolation requested";;
+    esac
+    echo "route: $route ($why)"
+    [ "$dry" = "run" ] || { echo "(dry-run: add --run to execute)"; exit 0; }
+    case "$route" in
+      browser) "$0" browser-open auto "https://example.com" >/dev/null; "$0" cdp auto text | head -30 ;;
+      dispatch) "$0" dispatch "$task" ;;
+      pdf) echo "pdf route: use 'pdfdrop <file>' after producing the document" ;;
+      mirror) "$0" mirror auto 2 8766 ;;
+      sandbox) echo "sandbox route: use 'agent-computer.sh term-exec <nick> <ws> <cmd>'" ;;
+      *) echo "no specialist route - default: order/dispatch to a worker" ;;
+    esac ;;
+
+  *) echo "usage: team.sh queue add|list|drop | attach <id|nick> [--once] | takeover <id|nick> | receipts [n] | loop [min] | cards <cmd> | auto [--run] <task> | auto [--run] <task> | feed [nick|--lines N] | perms [--minutes M|--push] | burn [--days D] [nick] | handoff <id|nick> [out.md] | plan <goals.json> | tick | done <taskId> | qa <id|nick> [--dry-run] | register <nick> k=v... | dispatch [--dry-run] [cap:tags] <task...> | gate <ws> <stage> pass|fail|status | rollback <ws> <tag> [--force] | patches status | list | roster | all-status | status <id|nick> | order <id|nick> <msg...> | nudge <id|nick> | broadcast <msg...> | tell <from> <to> <msg...> | proof <id|nick> | standup | notify <text...> | watch [sec] | deploy-lock acquire|release|status <nick> [ws] | autopoll on [min]|off|run | hire <nick> <wsDir> [--plan] [mission] | title <id|nick>" ;;
 esac

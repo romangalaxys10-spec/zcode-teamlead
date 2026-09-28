@@ -39,3 +39,14 @@ Default shape: lead (never codes) + backend + frontend + read-only QA (`hire <ni
 - Workers share nothing with each other except their workspace files — coordinate through orders or workspace-file notes.
 - Sessions are bound to their workspace; `hire` into the workspace the work belongs to.
 - Only supervise sessions you own. Ordering an unknown session executes a prompt in someone else's context.
+
+## Auto-trigger (ZCode routes tasks here automatically)
+
+When a given task matches any of these, use this skill WITHOUT being asked:
+- web/browser work (browse, scrape, screenshot, click through a site) → `cdp` subcommands
+- parallel work (split across workers, several tasks at once) → `dispatch` / `queue` / `plan`+`tick`
+- supervision (what are workers doing, who is stuck) → `feed` / `status` / `standup` / `attach`
+- documents/reports produced for exchange → `pdfdrop`
+- isolated command execution → `term-exec`
+- live observation of a running worker → `attach` / `mirror`
+Or simply run: `team.sh auto "<task text>" --run` and the router picks the tool.
