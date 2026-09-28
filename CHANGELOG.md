@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.6.0 — 2026-09-28 (OpenMuse-inspired powers)
+- `plan-card` — boxed progress card from the scheduler (done/ready/blocked markers, N/M done); `stage <nick> <assigned|working|review|done>` — delegated-task lifecycle in the roster; `filerec <nick> [ws]` — record worker file touches (git porcelain) into receipts
 - `queue add [pN] <text>` / `list` / `drop` — persistent prioritized follow-up queue (survives restarts)
 - `attach <nick> [--once]` — live tail of a worker's event stream (OpenMuse 'take control' view)
 - `takeover <nick>` — opens the worker's workspace in ZCode desktop via the `zcode://workspace/open` deep link
