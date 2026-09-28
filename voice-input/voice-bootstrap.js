@@ -6,13 +6,14 @@
 import { app } from 'electron'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { homedir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
 let inject = ''
 try {
-  inject = readFileSync(join(here, 'voice-inject.js'), 'utf8')
+  try { inject = readFileSync(join(homedir(), '.zcode/voice/voice-inject.js'), 'utf8') } catch { inject = readFileSync(join(here, 'voice-inject.js'), 'utf8') }
 } catch (e) {
   console.error('[voice] voice-inject.js unreadable, dictation disabled:', e?.message)
 }
