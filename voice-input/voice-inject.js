@@ -29,31 +29,41 @@
     pill.style.background = bg || 'rgba(30,30,34,.82)'
   }
 
-  // mic button docked next to the composer's usage control (ZCode-styled)
-  function dockButton() {
-    try {
-      const hosts = document.querySelectorAll('button, [role="button"]')
-      let anchor = null
-      for (const b of hosts) {
-        const t = (b.textContent || '').toLowerCase()
-        const ttl = (b.getAttribute('title') || b.getAttribute('aria-label') || '').toLowerCase()
-        if (t.includes('usage') || ttl.includes('usage') || t.includes('%') || ttl.includes('context')) { anchor = b; break }
-      }
-      if (!anchor) return
-      const btn = document.createElement('button')
-      btn.title = 'Voice dictation (hold Alt+V)'
-      btn.textContent = '🎤'
-      Object.assign(btn.style, {
-        background: 'transparent', border: 'none', cursor: 'pointer',
-        fontSize: '14px', padding: '0 6px', opacity: '.75',
-      })
-      btn.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); rec.active || rec.pending ? rec.stop() : rec.toggle() })
-      anchor.parentElement && anchor.parentElement.insertBefore(btn, anchor)
-      btn.addEventListener('click', () => (btn.style.opacity = btn.style.opacity === '1' ? '.75' : '1'))
-    } catch {}
+  // mic + speaker buttons docked to the chat input's bottom-right corner
+  const bar = document.createElement('div')
+  Object.assign(bar.style, { position: 'fixed', zIndex: 2147483647, display: 'flex', gap: '4px', pointerEvents: 'auto' })
+  const mkbtn = (txt, title) => {
+    const b = document.createElement('button')
+    b.textContent = txt; b.title = title
+    Object.assign(b.style, {
+      background: 'rgba(30,30,34,.9)', color: '#eee', border: '1px solid rgba(255,255,255,.14)',
+      borderRadius: '8px', cursor: 'pointer', font: '13px -apple-system,sans-serif',
+      padding: '4px 8px', opacity: '.85',
+    })
+    return b
   }
-  if (document.readyState === 'complete') setTimeout(dockButton, 1500)
-  else window.addEventListener('load', () => setTimeout(dockButton, 1500))
+  const mic2 = mkbtn('\u{1F3A4}', 'Voice dictation (hold Alt+V)')
+  const spk = mkbtn('\u{1F50A}', 'Toggle voice replies (TTS)')
+  mic2.addEventListener('click', (e) => { e.stopPropagation(); rec.active || rec.pending ? rec.stop() : rec.toggle() })
+  spk.addEventListener('click', (e) => {
+    e.stopPropagation()
+    const on = localStorage.getItem('zcode-tts') === '1'
+    localStorage.setItem('zcode-tts', on ? '0' : '1')
+    spk.textContent = on ? '\u{1F50A}' : '\u{1F504}'
+  })
+  spk.textContent = localStorage.getItem('zcode-tts') === '1' ? '\u{1F504}' : '\u{1F50A}'
+  bar.append(mic2, spk)
+  function dockBar() {
+    const ed = document.querySelector('textarea') || document.querySelector('[contenteditable="true"]')
+    if (!ed) { bar.style.display = 'none'; document.body.appendChild(bar); return }
+    const r = ed.getBoundingClientRect()
+    bar.style.display = 'flex'
+    bar.style.right = Math.max(8, window.innerWidth - r.right + 4) + 'px'
+    bar.style.top = (r.top - 34) + 'px'
+    if (!bar.isConnected) document.body.appendChild(bar)
+  }
+  setInterval(dockBar, 2000)
+  document.readyState === 'complete' ? dockBar() : window.addEventListener('load', dockBar)
 
   function editable(el) {
     if (!el) return false
