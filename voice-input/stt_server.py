@@ -80,7 +80,10 @@ def transcribe(data: bytes) -> str:
             os.unlink(audio_path)
 
 
-class Handler(BaseHTTPRequestHandler):
+from tts_endpoint import TTSHandlerMixin
+
+
+class Handler(TTSHandlerMixin, BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
     def _json(self, code: int, obj: dict) -> None:
@@ -92,6 +95,9 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if self.path.startswith("/tts?"):
+            self.tts_reply(self.path)
+            return
         if self.path == "/health":
             self._json(200, {"ok": True, "model": MODEL})
         else:
