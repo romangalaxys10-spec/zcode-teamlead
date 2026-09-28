@@ -132,6 +132,7 @@ affiliated with the ZCode project.** Details in [`app-patches/README.md`](app-pa
   flips it back in the desktop tasks-index (see `agents/zcode/2026-09-24` learnings).
 - `app-patches/` — supervisor mode (parallel bot tasks), native Discord provider,
   asar verify helpers. See its README for queue-vs-parallel trade-offs.
+- `skills/fable/` — auto-synced fable plugin (research/boost layer)
 - `voice-input/` — hold **Alt+V**, talk, transcript lands at the caret. Fully local
   mlx-whisper; install guide + 12-test rig included.
 
