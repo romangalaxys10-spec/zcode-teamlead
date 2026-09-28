@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.4.0 — 2026-09-28
+- `app-patches/patch-groups.py` — re-enable Telegram group chats (lost in the 3.14.3 update): replies route to the group, members authorized by botId, @BotName command suffix stripped
 - `app-patches/patch-supervisor.py` — supervisor mode: bots accept unlimited parallel tasks (busy messages spawn a fresh session instead of the "task still running" refusal), /tasks focus-switching while running, /new while busy, per-task streaming updates
 - `app-patches/patch-discord-native.py` — first-class Discord bot provider: fills the app's reserved `discord:null` registry slot with a REST v10 adapter + Gateway WebSocket runtime (DMs always, guilds on @mention)
 - `app-patches/asar_{unpacked_list,spotcheck}.py` — asar verification helpers (unpacked-set listing, sha256 spot-checks)

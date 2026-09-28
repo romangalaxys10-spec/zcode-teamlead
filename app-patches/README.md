@@ -131,3 +131,24 @@ Read Message History) → ZCode Bots → new bot → Discord → paste token.
 
 Run one OR the other per guard — not both. Both are idempotent and abort
 loudly when anchors don't match your app version. Back up `app.asar` first.
+
+
+### `patch-groups.py` — re-enable group chats (2026-09-28)
+
+The v3.14.3 app update wiped the original group-chat patch (updates replace
+`app.asar`). This re-implements groups for the repack patch line, supervisor-style:
+
+- telegram actor: in groups `providerUserId` becomes the **chat id**, so replies
+  land in the group instead of the sender's DM
+- `findAuthorizedBot` / `findBoundUser`: group members match the bot by **botId**
+  (owner permissions apply to everyone in the group) — private chats keep strict
+  per-user binding
+- the `privateChatOnly` refusal is removed
+- commands with Telegram's `@BotName` suffix parse correctly
+
+Telegram BotFather **Group Privacy** (ON by default) controls whether the bot
+sees non-command group messages — turn it OFF and re-add the bot for full
+supervisor behavior. With supervisor mode also installed, each group member's
+message spawns its own parallel task; /stop only stops the focused one.
+Known gap: inline-button presses (callback queries) from group members may
+still resolve to the sender's private chat.
