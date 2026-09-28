@@ -14,6 +14,7 @@
 - `tests/run_tests.sh` — 14 headless tests covering every addition (all green)
 
 ## 0.4.0 — 2026-09-28
+- supervisor v2 (`patch_supervisor_v2.py`) — `/task` unfenced: the session/task picker no longer refuses while busy (that guard survived the original supervisor patch), and `/task` is now registered in the Telegram command menu
 - `app-patches/patch-groups.py` — re-enable Telegram group chats (lost in the 3.14.3 update): replies route to the group, members authorized by botId, @BotName command suffix stripped
 - `app-patches/patch-supervisor.py` — supervisor mode: bots accept unlimited parallel tasks (busy messages spawn a fresh session instead of the "task still running" refusal), /tasks focus-switching while running, /new while busy, per-task streaming updates
 - `app-patches/patch-discord-native.py` — first-class Discord bot provider: fills the app's reserved `discord:null` registry slot with a REST v10 adapter + Gateway WebSocket runtime (DMs always, guilds on @mention)
