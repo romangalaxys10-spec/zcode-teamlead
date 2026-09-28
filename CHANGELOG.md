@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.6.0 — 2026-09-28 (OpenMuse-inspired powers)
+- `skills/agent-computer/` — OpenMuse 'agent computer' port (macOS edition): persistent per-worker Chrome profiles with takeover, sandbox-exec worker terminal with receipts, PDF drop/exchange zone (cupsfilter/textutil); SKILL.md included
 - `plan-card` — boxed progress card from the scheduler (done/ready/blocked markers, N/M done); `stage <nick> <assigned|working|review|done>` — delegated-task lifecycle in the roster; `filerec <nick> [ws]` — record worker file touches (git porcelain) into receipts
 - `queue add [pN] <text>` / `list` / `drop` — persistent prioritized follow-up queue (survives restarts)
 - `attach <nick> [--once]` — live tail of a worker's event stream (OpenMuse 'take control' view)
