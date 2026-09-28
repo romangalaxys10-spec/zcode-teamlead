@@ -14,6 +14,7 @@
 - `tests/run_tests.sh` — 14 headless tests covering every addition (all green)
 
 ## 0.4.0 — 2026-09-28
+- supervisor v12 (`patch_supervisor_v12.py`) — stale session model no longer dead-ends locked sessions: when a selected session's saved model selection can't resolve, the resume path falls back to the group's default model instead of throwing (saved selection stays preserved)
 - `skills/fable/` — the fable plugin (experience-research + boost layer) is now auto-synced into this repo every 2 min alongside the app patches (running cache version, `__pycache__` excluded)
 - supervisor v9 (`patch_supervisor_v9.py`) — CRITICAL fix: removed the v3 numeric page-jump intercept — Telegram task buttons decode to `/task <optionIndex>`, which the intercept hijacked as page jumps, re-rendering the picker on every tap. `/task <n>` is native select-Nth again; pagination advances only via the `Next page` option (`__next__` token)
 - supervisor v8 (`patch_supervisor_v8.py`) — group callback queries (inline-button taps) now carry the group chat id as actor identity, matching message actors — fixes /task selection buttons re-rendering the picker instead of confirming (pending-selection key mismatch)
