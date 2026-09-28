@@ -1,6 +1,7 @@
 # Changelog
 
 ## 0.6.0 — 2026-09-28 (OpenMuse-inspired powers)
+- agent-computer UNIVERSAL: Docker container terminals on Linux hosts (sandbox-exec fallback on macOS), CDP browser automation (navigate/text/title/eval/screenshot per worker), live browser mirroring with self-refreshing viewer, auto-relaunch of dead worker browsers; uses dedicated Chrome-for-Testing binary when present
 - voice-input REAL-TIME: `rtstt_server.py` (:8398, faster-whisper CPU streaming over WebSocket, rolling partials) + `voice-inject.js` upgraded to live captions (partials in pill, insert-on-release, batch :8399 fallback) + mic button docked next to the composer usage control; bootstrap now prefers `~/.zcode/voice/voice-inject.js` for hot updates
 - `skills/agent-computer/` — OpenMuse 'agent computer' port (macOS edition): persistent per-worker Chrome profiles with takeover, sandbox-exec worker terminal with receipts, PDF drop/exchange zone (cupsfilter/textutil); SKILL.md included
 - `plan-card` — boxed progress card from the scheduler (done/ready/blocked markers, N/M done); `stage <nick> <assigned|working|review|done>` — delegated-task lifecycle in the roster; `filerec <nick> [ws]` — record worker file touches (git porcelain) into receipts
