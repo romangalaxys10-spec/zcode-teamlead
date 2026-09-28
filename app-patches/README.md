@@ -152,3 +152,8 @@ supervisor behavior. With supervisor mode also installed, each group member's
 message spawns its own parallel task; /stop only stops the focused one.
 Known gap: inline-button presses (callback queries) from group members may
 still resolve to the sender's private chat.
+
+**Permission buttons:** approve/deny selections for bot-driven tasks are NATIVE
+in ZCode 3.14+ (the host builds `permission.respond` pickers automatically).
+For desktop-driven sessions (no bot attached), use `team.sh perms --push` to
+surface pending prompts to your webhook/Telegram feed.
