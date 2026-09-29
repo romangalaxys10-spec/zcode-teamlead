@@ -27,6 +27,7 @@
 - `tests/run_tests.sh` — 14 headless tests covering every addition (all green)
 
 ## 0.4.0 — 2026-09-28
+- supervisor v18 (`patch_supervisor_v18.py`) — private-chat ONBOARDING: first message from a new private chat presents a picker (new project&task / existing tasks across workspaces) instead of landing in the last-used project; groups unchanged
 - supervisor v17 (`patch_supervisor_v17.py`) — private-chat recovery: a poisoned draft (stale model pick) no longer errors on every message; the draft path resets to a fresh clean draft, retries, and if the host still can't resolve a model it returns the native PROJECT PICKER instead of an error
 - supervisor v15 (`patch_supervisor_v15.py`) — readContext tags the context even on the workspace-validation early-return (legacy slots returned untagged, so persisted selections/locks fell to the unscoped slot)
 - supervisor v13 (queue mid-task messages: ACK + 20s retry, 30 min cap, delivered notice) and v14 (draft-path stale model falls back to host-preferred instead of the Chinese resolution error) — full mitigation of parallel-task failures
