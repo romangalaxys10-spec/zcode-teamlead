@@ -9,7 +9,7 @@ APP_ASAR="${ZCODE_APP_ASAR:-/Applications/ZCode.app/Contents/Resources/app.asar}
 WORK=/tmp/zcode-discord
 SCRIPTS="$HOME/.zcode/scripts"
 
-[ "$(basename "$1")" = "--yes" ] || { echo "this modifies the installed ZCode app; run: $0 --yes"; exit 1; }
+[ "${1:-}" = "--yes" ] || { echo "this modifies the installed ZCode app; run: $0 --yes"; exit 1; }
 command -v node >/dev/null || { echo "node required"; exit 1; }
 
 echo "[1/6] backup"
