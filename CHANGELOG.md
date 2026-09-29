@@ -27,6 +27,7 @@
 - `tests/run_tests.sh` — 14 headless tests covering every addition (all green)
 
 ## 0.4.0 — 2026-09-28
+- supervisor v17 (`patch_supervisor_v17.py`) — private-chat recovery: a poisoned draft (stale model pick) no longer errors on every message; the draft path resets to a fresh clean draft, retries, and if the host still can't resolve a model it returns the native PROJECT PICKER instead of an error
 - supervisor v15 (`patch_supervisor_v15.py`) — readContext tags the context even on the workspace-validation early-return (legacy slots returned untagged, so persisted selections/locks fell to the unscoped slot)
 - supervisor v13 (queue mid-task messages: ACK + 20s retry, 30 min cap, delivered notice) and v14 (draft-path stale model falls back to host-preferred instead of the Chinese resolution error) — full mitigation of parallel-task failures
 - supervisor v12 (`patch_supervisor_v12.py`) — stale session model no longer dead-ends locked sessions: when a selected session's saved model selection can't resolve, the resume path falls back to the group's default model instead of throwing (saved selection stays preserved)
