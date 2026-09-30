@@ -34,6 +34,8 @@ BITRATE = int(os.environ.get("WBEAM_BITRATE", "12000000"))
 SW = int(os.environ.get("WBEAM_WIDTH", "1920"))
 SH = int(os.environ.get("WBEAM_HEIGHT", "1200"))
 MODE_FLAG = int(os.environ.get("WBEAM_MODE", "16"), 10) & 0x30  # 0x10 ultra / 0x20 stable / 0x30 quality
+# WBeam app blocks the stream when daemon build_revision != its own WBEAM_BUILD_REV (BuildRevisionGuard)
+BUILD_REV = os.environ.get("WBEAM_BUILD_REV", "0.1.2.0e5e8")
 
 FRAMES = [0]
 ADB = os.environ.get("ADB", "/Users/d/.local/bin/adb")
@@ -216,10 +218,10 @@ class ControlHandler(BaseHTTPRequestHandler):
         if p == "/status":
             self._json({"host_name": "mac-wbeamd", "state": FEED.state, "last_error": "",
                         "run_id": 1, "uptime": int(time.time() - FEED.state_ts),
-                        "service": "wbeamd-mac", "build_revision": "mac-1.0",
+                        "service": "wbeamd-mac", "build_revision": BUILD_REV,
                         "metrics": {"frames": FRAMES[0]}})
         elif p == "/health":
-            self._json({"service": "wbeamd-mac", "build_revision": "mac-1.0", "state": FEED.state})
+            self._json({"service": "wbeamd-mac", "build_revision": BUILD_REV, "state": FEED.state})
         elif p in ("/metrics", "/v1/client-metrics", "/client-metrics"):
             self._json({"metrics": {"frames": FRAMES[0]}, "ok": True})
         else:
