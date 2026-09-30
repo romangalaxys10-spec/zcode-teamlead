@@ -21,7 +21,7 @@ Feed: `cap` writes 28-byte CRCD records:
 Tuning env vars: WBEAM_FPS (120) WBEAM_BITRATE (12000000) WBEAM_WIDTH WBEAM_HEIGHT
                  WBEAM_MODE (16=ultra low-latency, 32=stable, 48=quality)
 """
-import json, os, queue, socketserver, struct, subprocess, threading, time
+import json, os, queue, socket, socketserver, struct, subprocess, threading, time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -151,6 +151,7 @@ class Feed:
             c["sock"].sendall(c["hello"])
         except OSError:
             self._drop(c); return
+        sent = 0; t0 = time.time()
         while True:
             try:
                 frame = c["q"].get(timeout=1.0)
@@ -161,6 +162,11 @@ class Feed:
                 continue
             try:
                 c["sock"].sendall(frame)
+                sent += 1
+                if sent % 300 == 0:
+                    now = time.time()
+                    print(f"pump {c['addr']}: {sent/(now-t0):.0f} fps sent", flush=True)
+                    sent = 0; t0 = now
             except OSError:
                 break
         self._drop(c)
@@ -190,6 +196,7 @@ class Feed:
         hello = (b"WBS1" + bytes([0x02, MODE_FLAG]) + struct.pack(">H", 24)
                  + struct.pack(">Q", session_id)
                  + struct.pack(">HHH", SW, SH, FPS) + b"\x00\x00")
+        sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)  # Nagle+delayed-ACK = ~30ms/frame stalls
         entry = {"sock": sock, "hello": hello, "q": queue.Queue(maxsize=480), "addr": addr}
         with self._cclients_lock:
             self._clients.append(entry)
